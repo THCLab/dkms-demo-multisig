@@ -4,6 +4,7 @@ import 'package:dkms_demo_multisig/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:keri/keri.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,8 +31,9 @@ class _MyAppState extends State<MyApp> {
   var initiatorKel = '';
   var isIncepting = false;
   var isInceptionError = false;
-  List<String> participants = [];
+  List<Identifier> participants = [];
   List<bool> selectedParticipants = [];
+  late Identifier identifier;
 
 
   @override
@@ -91,13 +93,13 @@ class _MyAppState extends State<MyApp> {
                 var signature = await signer.sign(icp_event);
                 print(icp_event);
                 print(signature);
-                var identifier = await finalizeInception(
+                identifier = await finalizeInception(
                     event: icp_event,
                     signature: await signatureFromHex(
                         st: SignatureType.Ed25519Sha512, signature: signature));
                 witness_id_list.add(witness_id);
-                print(identifier.id);
-                initiatorKel = await getKel(cont: identifier);
+                //print(identifier.id);
+                initiatorKel = identifier.id;
                 setState((){});
                 print('here');
               },
@@ -112,13 +114,20 @@ class _MyAppState extends State<MyApp> {
             ),
             isIncepting ? connectingToWitness() : Container(),
             isInceptionError ? inceptionError() : Container(),
-            initiatorKel.isNotEmpty ? Text("Initiator Kel: $initiatorKel") : Container(),
+            initiatorKel.isNotEmpty ? Text("Identifier id: $initiatorKel") : Container(),
+            initiatorKel.isNotEmpty ? const Text("Scan this QR code with another device to add this device to their list of participants") : Container(),
+            initiatorKel.isNotEmpty ? QrImage(
+              data: identifier.id,
+              version: QrVersions.auto,
+              size: 200.0,
+            ) : Container(),
             initiatorKel.isNotEmpty ? RawMaterialButton(
               onPressed: () async{
-                var participant = await Navigator.push(
+                var participantId = await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const Scanner()),
                 );
+                var participant = await newIdentifier(idStr: participantId);
                 if(!participants.contains(participant)){
                   setState(() {
                     participants.add(participant);
@@ -163,10 +172,46 @@ class _MyAppState extends State<MyApp> {
                       onChanged: (bool? selected){
                         selectedParticipants[index] = !selectedParticipants[index];
                       },
-                      title: Text(participants[index]),
+                      title: Text(participants[index].id),
                     );
                   }),
             ),
+            initiatorKel.isNotEmpty ? RawMaterialButton(
+                onPressed: () async{
+                  var icp = await inceptGroup(
+                      identifier: identifier,
+                      participants: participants,
+                      signatureThreshold: 2,
+                      initialWitnesses: witness_id_list,
+                      witnessThreshold: 1);
+                  var signature = await signer.sign(icp.icpEvent);
+                  List<String> signaturesEx = [];
+                  List<DataAndSignature> toForward = [];
+                  for(var exchange in icp.exchanges){
+                    signaturesEx.add(await signer.sign(exchange));
+                  }
+                  for(int i=0; i<signaturesEx.length; i++){
+                    toForward.add(await newDataAndSignature(
+                        data: icp.exchanges[i],
+                        signature: await signatureFromHex(
+                            st: SignatureType.Ed25519Sha512, signature: signaturesEx[i])));
+                  }
+                  var group_identifier = await finalizeGroupIncept(
+                      identifier: identifier,
+                      groupEvent: icp.icpEvent,
+                      signature: await signatureFromHex(
+                          st: SignatureType.Ed25519Sha512, signature: signature),
+                      toForward: toForward);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: const Text("Incept group", style: TextStyle(fontWeight: FontWeight.bold),),
+                ),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18.0),
+                    side: const BorderSide(width: 2)
+                )
+            ) : Container(),
           ],
         ),
       ),

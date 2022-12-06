@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:asymmetric_crypto_primitives/asymmetric_crypto_primitives.dart';
 import 'package:asymmetric_crypto_primitives/ed25519_signer.dart';
 import 'package:dkms_demo_multisig/scanner.dart';
@@ -97,9 +99,20 @@ class _MyAppState extends State<MyApp> {
                     event: icp_event,
                     signature: await signatureFromHex(
                         st: SignatureType.Ed25519Sha512, signature: signature));
+
                 witness_id_list.add(witness_id);
-                initiatorKel = identifier.id;
+                var query = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
+                var sig_query = await signer.sign(query[0]);
+                await finalizeMailboxQuery(identifier: identifier, queryEvent: query[0], signature: await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: sig_query));
+                initiatorKel = await getKel(cont: identifier);
                 setState((){});
+                final Timer periodicTimer = Timer.periodic(
+                  const Duration(seconds: 10),
+                      (Timer t) async{
+                        await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
+                        print('querying');
+                  },
+                );
                 print('here');
               },
               child: Padding(
@@ -113,7 +126,7 @@ class _MyAppState extends State<MyApp> {
             ),
             isIncepting ? connectingToWitness() : Container(),
             isInceptionError ? inceptionError() : Container(),
-            initiatorKel.isNotEmpty ? Text("Identifier id:", style: TextStyle(fontWeight: FontWeight.bold),) : Container(),
+            initiatorKel.isNotEmpty ? Text("Identifier kel:", style: TextStyle(fontWeight: FontWeight.bold),) : Container(),
             initiatorKel.isNotEmpty ? Text(initiatorKel, style: TextStyle(color: Colors.green),) : Container(),
             initiatorKel.isNotEmpty ? SizedBox(height: 10,) : Container(),
             initiatorKel.isNotEmpty ? Text("Scan this QR code with another device to add this device to their list of participants", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center,) : Container(),

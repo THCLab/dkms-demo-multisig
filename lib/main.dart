@@ -131,7 +131,7 @@ class _MyAppState extends State<MyApp> {
             initiatorKel.isNotEmpty ? SizedBox(height: 10,) : Container(),
             initiatorKel.isNotEmpty ? Text("Scan this QR code with another device to add this device to their list of participants", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center,) : Container(),
             initiatorKel.isNotEmpty ? QrImage(
-              data: identifier.id,
+              data: initiatorKel,
               version: QrVersions.auto,
               size: 200.0,
             ) : Container(),

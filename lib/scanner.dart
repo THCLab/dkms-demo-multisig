@@ -44,7 +44,9 @@ class _ScannerState extends State<Scanner> {
                     MobileScanner(
                       onDetect: (barcode, args){
                         print(barcode.rawValue);
-                        result = barcode;
+                        setState((){
+                          result = barcode;
+                        });
                       },
                     ),
                     Center(
@@ -70,8 +72,7 @@ class _ScannerState extends State<Scanner> {
                     child: (result != null)
                         ? Column(
                       children: [
-                        Text( mode == 1 ? 'Watcher oobi: ${result!.rawValue}' : mode == 2 ? 'Issuer oobi: ${result!.rawValue}' : mode == 3 ? 'ACDC: ${result!.rawValue}' :
-                        'Incorrect mode'),
+                        Text('Participant id: ${result!.rawValue}'),
                         RawMaterialButton(
                             onPressed: () {
                               Navigator.pop(context, result!.rawValue);

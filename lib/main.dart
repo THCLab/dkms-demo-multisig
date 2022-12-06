@@ -98,7 +98,6 @@ class _MyAppState extends State<MyApp> {
                     signature: await signatureFromHex(
                         st: SignatureType.Ed25519Sha512, signature: signature));
                 witness_id_list.add(witness_id);
-                //print(identifier.id);
                 initiatorKel = identifier.id;
                 setState((){});
                 print('here');
@@ -114,8 +113,10 @@ class _MyAppState extends State<MyApp> {
             ),
             isIncepting ? connectingToWitness() : Container(),
             isInceptionError ? inceptionError() : Container(),
-            initiatorKel.isNotEmpty ? Text("Identifier id: $initiatorKel") : Container(),
-            initiatorKel.isNotEmpty ? const Text("Scan this QR code with another device to add this device to their list of participants") : Container(),
+            initiatorKel.isNotEmpty ? Text("Identifier id:", style: TextStyle(fontWeight: FontWeight.bold),) : Container(),
+            initiatorKel.isNotEmpty ? Text(initiatorKel, style: TextStyle(color: Colors.green),) : Container(),
+            initiatorKel.isNotEmpty ? SizedBox(height: 10,) : Container(),
+            initiatorKel.isNotEmpty ? Text("Scan this QR code with another device to add this device to their list of participants", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center,) : Container(),
             initiatorKel.isNotEmpty ? QrImage(
               data: identifier.id,
               version: QrVersions.auto,
@@ -137,7 +138,7 @@ class _MyAppState extends State<MyApp> {
               },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: const Text("Scan for participants", style: TextStyle(fontWeight: FontWeight.bold),),
+                  child: const Text("Scan for participants", style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18.0),

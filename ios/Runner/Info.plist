@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSCameraUsageDescription</key>
+    <string>Camera is necessary to scan other participants of the group</string>
 	<key>CFBundleDisplayName</key>
 	<string>Dkms Demo Multisig</string>
 	<key>CFBundleExecutable</key>

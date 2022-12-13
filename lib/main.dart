@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:asymmetric_crypto_primitives/asymmetric_crypto_primitives.dart';
 import 'package:asymmetric_crypto_primitives/ed25519_signer.dart';
@@ -36,6 +37,7 @@ class _MyAppState extends State<MyApp> {
   List<Identifier> participants = [];
   List<bool> selectedParticipants = [];
   late Identifier identifier;
+  String oobiJson = '';
 
 
   @override
@@ -103,8 +105,18 @@ class _MyAppState extends State<MyApp> {
                 witness_id_list.add(witness_id);
                 var query = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
                 var sig_query = await signer.sign(query[0]);
-                await finalizeMailboxQuery(identifier: identifier, queryEvent: query[0], signature: await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: sig_query));
+                await finalizeQuery(identifier: identifier, queryEvent: query[0], signature: await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: sig_query));
                 initiatorKel = await getKel(cont: identifier);
+
+                var watcher_oobi = '{"eid":"BF2t2NPc1bwptY1hYV0YCib1JjQ11k9jtuaZemecPF5b","scheme":"http","url":"http://127.0.0.1:3236/"}';
+                var add_watcher_message = await addWatcher(controller: identifier, watcherOobi: watcher_oobi);
+                print("\nController generate end role message to add witness: $add_watcher_message");
+                var watcher_sig = await signer.sign(add_watcher_message);
+                var ev = await finalizeEvent(identifier: identifier, event: add_watcher_message, signature: await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: watcher_sig));
+
+                Map<String, String> jsonToOobi = {"cid":identifier.id, "role":"witness", "eid":witness_id};
+                oobiJson = jsonEncode(jsonToOobi);
+
                 setState((){});
                 final Timer periodicTimer = Timer.periodic(
                   const Duration(seconds: 10),
@@ -131,7 +143,7 @@ class _MyAppState extends State<MyApp> {
             initiatorKel.isNotEmpty ? SizedBox(height: 10,) : Container(),
             initiatorKel.isNotEmpty ? Text("Scan this QR code with another device to add this device to their list of participants", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center,) : Container(),
             initiatorKel.isNotEmpty ? QrImage(
-              data: initiatorKel,
+              data: oobiJson,
               version: QrVersions.auto,
               size: 200.0,
             ) : Container(),
@@ -141,7 +153,9 @@ class _MyAppState extends State<MyApp> {
                   context,
                   MaterialPageRoute(builder: (context) => const Scanner()),
                 );
-                var participant = await newIdentifier(idStr: participantId);
+                //await processStream(stream: participantId);
+                var oobiReceived = jsonDecode(participantId);
+                var participant = await newIdentifier(idStr: participantId['cid']);
                 if(!participants.contains(participant)){
                   setState(() {
                     participants.add(participant);

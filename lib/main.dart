@@ -26,9 +26,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String current_b64_key='';
   String next_b64_key='';
-  String witness_id = "BFXLiTjiRdSBPLL6hLa0rskIxk3dh4XwJLfctkJFLRSS";
+  String witness_id = "BJq7UABlttINuWJh1Xl2lkqZG4NTdUdqnbFJDa6ZyxCC";
   String wit_location =
-      '{"eid":"BFXLiTjiRdSBPLL6hLa0rskIxk3dh4XwJLfctkJFLRSS","scheme":"http","url":"http://192.168.1.13:3232/"}';
+      '{"eid":"BJq7UABlttINuWJh1Xl2lkqZG4NTdUdqnbFJDa6ZyxCC","scheme":"http","url":"http://192.168.1.13:3232/"}';
   late Ed25519Signer signer;
   List<String> witness_id_list = [];
   var initiatorKel = '';
@@ -108,7 +108,7 @@ class _MyAppState extends State<MyApp> {
                 await finalizeQuery(identifier: identifier, queryEvent: query[0], signature: await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: sig_query));
                 initiatorKel = await getKel(cont: identifier);
 
-                var watcher_oobi = '{"eid":"BF2t2NPc1bwptY1hYV0YCib1JjQ11k9jtuaZemecPF5b","scheme":"http","url":"http://127.0.0.1:3236/"}';
+                var watcher_oobi = '{"eid":"BF2t2NPc1bwptY1hYV0YCib1JjQ11k9jtuaZemecPF5b","scheme":"http","url":"http://192.168.1.13:3236/"}';
                 var add_watcher_message = await addWatcher(controller: identifier, watcherOobi: watcher_oobi);
                 print("\nController generate end role message to add witness: $add_watcher_message");
                 var watcher_sig = await signer.sign(add_watcher_message);

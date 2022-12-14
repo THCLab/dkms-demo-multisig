@@ -156,9 +156,15 @@ class _MyAppState extends State<MyApp> {
                   MaterialPageRoute(builder: (context) => const Scanner()),
                 );
                 //await processStream(stream: participantId);
-                await sendOobiToWatcher(identifier: identifier, oobisJson: participantId);
+                //await sendOobiToWatcher(identifier: identifier, oobisJson: participantId);
+
 
                 var oobiReceived = jsonDecode(participantId);
+                print(oobiReceived);
+                await sendOobiToWatcher(identifier: identifier, oobisJson: jsonEncode(oobiReceived[0]));
+                await sendOobiToWatcher(identifier: identifier, oobisJson: jsonEncode(oobiReceived[1]));
+
+
                 var participant = await newIdentifier(idStr: oobiReceived[1]['cid']);
                 if(!participants.contains(participant)){
                   setState(() {

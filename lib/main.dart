@@ -115,7 +115,9 @@ class _MyAppState extends State<MyApp> {
                 var ev = await finalizeEvent(identifier: identifier, event: add_watcher_message, signature: await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: watcher_sig));
 
                 Map<String, String> jsonToOobi = {"cid":identifier.id, "role":"witness", "eid":witness_id};
-                oobiJson = jsonEncode(jsonToOobi);
+                Map<String, String> witnessOobi = {"eid":witness_id, "scheme": "http", "url":"http://192.168.1.13:3232/"};
+                List<dynamic> toSend = [witnessOobi,jsonToOobi];
+                oobiJson = jsonEncode(toSend);
 
                 setState((){});
                 final Timer periodicTimer = Timer.periodic(
@@ -155,6 +157,7 @@ class _MyAppState extends State<MyApp> {
                 );
                 //await processStream(stream: participantId);
                 await sendOobiToWatcher(identifier: identifier, oobisJson: participantId);
+
                 var oobiReceived = jsonDecode(participantId);
                 var participant = await newIdentifier(idStr: oobiReceived['cid']);
                 if(!participants.contains(participant)){
@@ -163,6 +166,18 @@ class _MyAppState extends State<MyApp> {
                     selectedParticipants.add(true);
                   });
                 }
+
+                List<String> watcherQuery = await queryWatchers(whoAsk: identifier, aboutWho: participant);
+                List<Signature> querySignatures = [];
+                for(String query in watcherQuery){
+                  querySignatures.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(query)));
+                }
+
+                for(int i=0; i<querySignatures.length; i++){
+                  await finalizeQuery(identifier: identifier, queryEvent: watcherQuery[i], signature: querySignatures[i]);
+                }
+
+                print(watcherQuery);
               },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),

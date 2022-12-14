@@ -159,7 +159,7 @@ class _MyAppState extends State<MyApp> {
                 await sendOobiToWatcher(identifier: identifier, oobisJson: participantId);
 
                 var oobiReceived = jsonDecode(participantId);
-                var participant = await newIdentifier(idStr: oobiReceived['cid']);
+                var participant = await newIdentifier(idStr: oobiReceived[1]['cid']);
                 if(!participants.contains(participant)){
                   setState(() {
                     participants.add(participant);

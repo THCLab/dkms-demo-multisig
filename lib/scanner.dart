@@ -1,8 +1,8 @@
-
 import "dart:io";
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
 class Scanner extends StatefulWidget {
   const Scanner({Key? key}) : super(key: key);
 
@@ -42,9 +42,9 @@ class _ScannerState extends State<Scanner> {
                 child: Stack(
                   children: [
                     MobileScanner(
-                      onDetect: (barcode, args){
+                      onDetect: (barcode, args) {
                         print(barcode.rawValue);
-                        setState((){
+                        setState(() {
                           result = barcode;
                         });
                       },
@@ -71,20 +71,24 @@ class _ScannerState extends State<Scanner> {
                   child: Center(
                     child: (result != null)
                         ? Column(
-                      children: [
-                        Text('Participant id: ${result!.rawValue}'),
-                        RawMaterialButton(
-                            onPressed: () {
-                              Navigator.pop(context, result!.rawValue);
-                            },
-                            child: Text("Accept", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18.0),
-                                side: BorderSide(width: 2, color: Colors.green)
-                            )
-                        ),
-                      ],
-                    )
+                            children: [
+                              Text('Participant id: ${result!.rawValue}'),
+                              RawMaterialButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, result!.rawValue);
+                                  },
+                                  child: Text(
+                                    "Accept",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18.0),
+                                      side: BorderSide(
+                                          width: 2, color: Colors.green))),
+                            ],
+                          )
                         : Text('Scan a code'),
                   ),
                 ),
@@ -95,5 +99,4 @@ class _ScannerState extends State<Scanner> {
       ),
     );
   }
-
 }

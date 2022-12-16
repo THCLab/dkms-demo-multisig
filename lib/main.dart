@@ -169,6 +169,7 @@ class _MyAppState extends State<MyApp> {
                 //Refresh the UI
                 setState(() {
                   isMailboxQueried = true;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Mailbox queried!')));
                 });
               },
                 child: Padding(
@@ -180,7 +181,7 @@ class _MyAppState extends State<MyApp> {
                     side: const BorderSide(width: 2)
                 )
             ) : Container(),
-            RawMaterialButton(
+            isMailboxQueried ? RawMaterialButton(
                 onPressed: () async{
                   //Set up the watcher data and add it
                   var watcher_oobi = '{"eid":"BF2t2NPc1bwptY1hYV0YCib1JjQ11k9jtuaZemecPF5b","scheme":"http","url":"http://192.168.1.13:3236/"}';
@@ -252,7 +253,7 @@ class _MyAppState extends State<MyApp> {
                     borderRadius: BorderRadius.circular(18.0),
                     side: const BorderSide(width: 2)
                 )
-            ),
+            ) : Container(),
             isWatcherAdded ? Text("Scan this QR code with another device to add this device to their list of participants", style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center,) : Container(),
             isWatcherAdded ? QrImage(
               data: oobiJson,
@@ -369,6 +370,7 @@ class _MyAppState extends State<MyApp> {
                           st: SignatureType.Ed25519Sha512, signature: signature),
                       toForward: toForward);
                   groupIdentifiers.add(group_identifier);
+                  setState(() {});
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -468,6 +470,7 @@ class _MyAppState extends State<MyApp> {
                         ]
                     );
                     groupIdentifiers.add(groupIdentifier2);
+                    setState(() {});
                   }
                 }
                 Navigator.of(context).pop();

@@ -40,6 +40,9 @@ class _MyAppState extends State<MyApp> {
   late Identifier identifier;
   String oobiJson = '';
   bool actionClicked = false;
+  late Identifier groupIdentifier2;
+  late Identifier group_identifier;
+  List<Identifier> groupIdentifiers = [];
 
 
   @override
@@ -137,6 +140,19 @@ class _MyAppState extends State<MyApp> {
                             if(!actionClicked){
                               _showMyDialog(finalizeList);
                             }
+                          }
+                        }
+
+                        for (var group in groupIdentifiers){
+                          var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
+                          var signedGroupQuery = [];
+                          for (var singleQuery in groupQuery){
+                            signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(singleQuery)));
+                          }
+                          for (int i=0; i<signedGroupQuery.length; i++) {
+                            await finalizeQuery(identifier: identifier,
+                                queryEvent: groupQuery[i],
+                                signature: signedGroupQuery[i]);
                           }
                         }
                         //print('querying');
@@ -259,12 +275,13 @@ class _MyAppState extends State<MyApp> {
                         signature: await signatureFromHex(
                             st: SignatureType.Ed25519Sha512, signature: signaturesEx[i])));
                   }
-                  var group_identifier = await finalizeGroupIncept(
+                  group_identifier = await finalizeGroupIncept(
                       identifier: identifier,
                       groupEvent: icp.icpEvent,
                       signature: await signatureFromHex(
                           st: SignatureType.Ed25519Sha512, signature: signature),
                       toForward: toForward);
+                  groupIdentifiers.add(group_identifier);
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -327,7 +344,7 @@ class _MyAppState extends State<MyApp> {
                   if(entry.action == SelectedAction.multisigRequest){
                     var icpSignature = await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(entry.data));
                     var icpExSignature = await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(entry.additionaData));
-                    await finalizeGroupIncept(
+                    groupIdentifier2 = await finalizeGroupIncept(
                         identifier: identifier,
                         groupEvent: entry.data,
                         signature: icpSignature,
@@ -337,6 +354,7 @@ class _MyAppState extends State<MyApp> {
                               signature: icpExSignature)
                         ]
                     );
+                    groupIdentifiers.add(groupIdentifier2);
                   }
                 }
                 Navigator.of(context).pop();

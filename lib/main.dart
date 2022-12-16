@@ -5,9 +5,10 @@ import 'package:asymmetric_crypto_primitives/asymmetric_crypto_primitives.dart';
 import 'package:asymmetric_crypto_primitives/ed25519_signer.dart';
 import 'package:dkms_demo_multisig/scanner.dart';
 import 'package:flutter/material.dart';
-import 'package:keri/keri.dart';
+import 'package:keri/keri.dart' hide Action;
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:dkms_demo_multisig/enums.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,7 @@ class _MyAppState extends State<MyApp> {
   List<bool> selectedParticipants = [];
   late Identifier identifier;
   String oobiJson = '';
+  bool actionClicked = false;
 
 
   @override
@@ -121,13 +123,26 @@ class _MyAppState extends State<MyApp> {
 
                 setState((){});
                 final Timer periodicTimer = Timer.periodic(
-                  const Duration(seconds: 10),
+                  const Duration(seconds: 15),
                       (Timer t) async{
-                        await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
-                        print('querying');
+                        List<String> queryEvent = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
+                        var querySignatureList = [];
+                        List<ActionRequired> finalizeList = [];
+                        for(var event in queryEvent){
+                          querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(event)));
+                        }
+                        for (int i=0; i<querySignatureList.length; i++){
+                          finalizeList = await finalizeQuery(identifier: identifier, queryEvent: queryEvent[i], signature: querySignatureList[i]);
+                          if(finalizeList.isNotEmpty){
+                            if(!actionClicked){
+                              _showMyDialog(finalizeList);
+                            }
+                          }
+                        }
+                        //print('querying');
                   },
                 );
-                print('here');
+                //print('here');
               },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -155,8 +170,6 @@ class _MyAppState extends State<MyApp> {
                   context,
                   MaterialPageRoute(builder: (context) => const Scanner()),
                 );
-                //await processStream(stream: participantId);
-                //await sendOobiToWatcher(identifier: identifier, oobisJson: participantId);
 
 
                 var oobiReceived = jsonDecode(participantId);
@@ -287,5 +300,62 @@ class _MyAppState extends State<MyApp> {
       ],
     );
   }
+
+  Future<void> _showMyDialog(List finalizeList) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Action Required'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('Your mailbox contains a message that requires action'),
+                Text('Would you like to continue?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Approve'),
+              onPressed: () async{
+                setState(() {
+                  actionClicked = true;
+                });
+                for(var entry in finalizeList){
+                  if(entry.action == SelectedAction.multisigRequest){
+                    var icpSignature = await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(entry.data));
+                    var icpExSignature = await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(entry.additionaData));
+                    await finalizeGroupIncept(
+                        identifier: identifier,
+                        groupEvent: entry.data,
+                        signature: icpSignature,
+                        toForward: [
+                          await newDataAndSignature(
+                              data: entry.additionaData,
+                              signature: icpExSignature)
+                        ]
+                    );
+                  }
+                }
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Dismiss'),
+              onPressed: () {
+                setState(() {
+                  actionClicked = false;
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
 

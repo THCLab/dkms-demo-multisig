@@ -456,7 +456,10 @@ class _MyAppState extends State<MyApp> {
                   actionClicked = true;
                 });
                 for(var entry in finalizeList){
-                  if(entry.action == SelectedAction.multisigRequest){
+                  print(entry.action);
+                  var selectedAction = SelectedAction.multisigRequest;
+                  if(entry.action == selectedAction.action){
+                    print('wlazło');
                     var icpSignature = await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(entry.data));
                     var icpExSignature = await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(entry.additionaData));
                     groupIdentifier2 = await finalizeGroupIncept(
@@ -469,6 +472,7 @@ class _MyAppState extends State<MyApp> {
                               signature: icpExSignature)
                         ]
                     );
+                    print(groupIdentifier2);
                     groupIdentifiers.add(groupIdentifier2);
                     setState(() {});
                   }

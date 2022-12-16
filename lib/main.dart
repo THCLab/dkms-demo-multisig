@@ -220,7 +220,7 @@ class _MyAppState extends State<MyApp> {
                         //If query requires action, show Alert Dialog
                         if(finalizeList.isNotEmpty){
                           if(!actionClicked){
-                            _showMyDialog(finalizeList);
+                            _showMyDialog(finalizeList).then((value) => setState((){}));
                           }
                         }
                       }

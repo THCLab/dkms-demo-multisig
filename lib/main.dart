@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:asymmetric_crypto_primitives/asymmetric_crypto_primitives.dart';
 import 'package:asymmetric_crypto_primitives/ed25519_signer.dart';
@@ -213,7 +214,7 @@ class _MyAppState extends State<MyApp> {
 
                       //Sign each query
                       for(var event in queryEvent){
-                        querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.signNoAuth(event)));
+                        querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(event) : await signer.sign(event)));
                       }
 
                       //Finalize each query
@@ -235,7 +236,7 @@ class _MyAppState extends State<MyApp> {
 
                         //Sign each query
                         for (var singleQuery in groupQuery){
-                          signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.signNoAuth(singleQuery)));
+                          signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
                         }
 
                         //Finalize each query

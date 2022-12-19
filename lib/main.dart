@@ -68,6 +68,9 @@ class _MyAppState extends State<MyApp> {
   bool isWatcherAdded = false;
   bool isMailboxQueried = false;
 
+  //Group kel for checking if the usecase works
+  String groupKel = '';
+
 
   @override
   void initState() {
@@ -210,7 +213,7 @@ class _MyAppState extends State<MyApp> {
 
                       //Sign each query
                       for(var event in queryEvent){
-                        querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(event)));
+                        querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.signNoAuth(event)));
                       }
 
                       //Finalize each query
@@ -232,7 +235,7 @@ class _MyAppState extends State<MyApp> {
 
                         //Sign each query
                         for (var singleQuery in groupQuery){
-                          signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(singleQuery)));
+                          signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.signNoAuth(singleQuery)));
                         }
 
                         //Finalize each query
@@ -407,6 +410,25 @@ class _MyAppState extends State<MyApp> {
                     return Text(groupIdentifiers[index].id);
                   }),
             ),
+            groupIdentifiers.isNotEmpty ?
+            RawMaterialButton(
+              onPressed: () async{
+                groupKel = await getKel(cont: groupIdentifiers[0]);
+                setState(() {
+
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: const Text("Get group kel", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18.0),
+                  side: const BorderSide(width: 2)
+              )
+            ) : Container(),
+            groupKel.isNotEmpty ? Text("Group kel:", style: TextStyle(fontWeight: FontWeight.bold),) : Container(),
+            groupKel.isNotEmpty ? Text(groupKel, style: TextStyle(color: Colors.green),) : Container(),
           ],
         ),
       ),

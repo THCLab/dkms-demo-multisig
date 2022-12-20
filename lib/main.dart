@@ -474,13 +474,29 @@ class _MyAppState extends State<MyApp> {
               },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: const Text("Get group kel", style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text("query(temp)", style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18.0),
                   side: const BorderSide(width: 2)
               )
             ) : Container(),
+            RawMaterialButton(
+                onPressed: () async{
+                  groupKel = await getKel(cont: groupIdentifiers[0]);
+                  setState(() {
+
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: const Text("Get group kel", style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18.0),
+                    side: const BorderSide(width: 2)
+                )
+            ),
             groupKel.isNotEmpty ? Text("Group kel:", style: TextStyle(fontWeight: FontWeight.bold),) : Container(),
             groupKel.isNotEmpty ? Text(groupKel, style: TextStyle(color: Colors.green),) : Container(),
           ],

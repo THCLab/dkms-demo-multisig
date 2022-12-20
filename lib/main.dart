@@ -418,6 +418,59 @@ class _MyAppState extends State<MyApp> {
                 setState(() {
 
                 });
+
+                if(group_identifier != null){
+                  for (var group in groupIdentifiers){
+                    var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
+                    var signedGroupQuery = [];
+
+                    //Sign each query
+                    for (var singleQuery in groupQuery){
+                      signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
+                    }
+
+                    //Finalize each query
+                    for (int i=0; i<signedGroupQuery.length; i++) {
+                      await finalizeQuery(identifier: identifier,
+                          queryEvent: groupQuery[i],
+                          signature: signedGroupQuery[i]);
+                    }
+                  }
+
+                  for (var group in groupIdentifiers){
+                    var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
+                    var signedGroupQuery = [];
+
+                    //Sign each query
+                    for (var singleQuery in groupQuery){
+                      signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
+                    }
+
+                    //Finalize each query
+                    for (int i=0; i<signedGroupQuery.length; i++) {
+                      await finalizeQuery(identifier: identifier,
+                          queryEvent: groupQuery[i],
+                          signature: signedGroupQuery[i]);
+                    }
+                  }
+                }else{
+                  for (var group in groupIdentifiers){
+                    var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
+                    var signedGroupQuery = [];
+
+                    //Sign each query
+                    for (var singleQuery in groupQuery){
+                      signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
+                    }
+
+                    //Finalize each query
+                    for (int i=0; i<signedGroupQuery.length; i++) {
+                      await finalizeQuery(identifier: identifier,
+                          queryEvent: groupQuery[i],
+                          signature: signedGroupQuery[i]);
+                    }
+                  }
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),

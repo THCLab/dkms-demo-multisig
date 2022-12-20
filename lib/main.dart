@@ -419,7 +419,7 @@ class _MyAppState extends State<MyApp> {
 
                 });
 
-                if(group_identifier != null){
+                if(Platform.isAndroid){
                   for (var group in groupIdentifiers){
                     var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
                     var signedGroupQuery = [];

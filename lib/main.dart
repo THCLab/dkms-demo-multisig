@@ -414,11 +414,6 @@ class _MyAppState extends State<MyApp> {
             groupIdentifiers.isNotEmpty ?
             RawMaterialButton(
               onPressed: () async{
-                groupKel = await getKel(cont: groupIdentifiers[0]);
-                setState(() {
-
-                });
-
                 if(Platform.isAndroid){
                   for (var group in groupIdentifiers){
                     var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);

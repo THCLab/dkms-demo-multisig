@@ -176,6 +176,8 @@ class _MyAppState extends State<MyApp> {
                   isMailboxQueried = true;
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Mailbox queried!')));
                 });
+
+                print(await getKel(cont: identifier));
               },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),

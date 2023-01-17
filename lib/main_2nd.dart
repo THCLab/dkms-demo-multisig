@@ -467,6 +467,8 @@ class _MyAppState extends State<MyApp> {
                       }
                     }
 
+                   // notifyWitnesses(identifier: groupIdentifiers[0]);
+
                     // for (var group in groupIdentifiers){
                     //   var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
                     //   var signedGroupQuery = [];

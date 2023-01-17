@@ -140,6 +140,7 @@ class _MyAppState extends State<MyApp> {
                     signature: await signatureFromHex(
                         st: SignatureType.Ed25519Sha512, signature: signature));
                 initiatorId = identifier.id;
+                await notifyWitnesses(identifier: identifier);
 
                 //Refresh the UI
                 setState((){
@@ -208,26 +209,26 @@ class _MyAppState extends State<MyApp> {
                     const Duration(seconds: 15),
                         (Timer t) async{
                       //Every 15 seconds query own mailbox
-                      List<String> queryEvent = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
-                      var querySignatureList = [];
-                      List<ActionRequired> finalizeList = [];
-
-                      //Sign each query
-                      for(var event in queryEvent){
-                        querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(event) : await signer.sign(event)));
-                      }
-
-                      //Finalize each query
-                      for (int i=0; i<querySignatureList.length; i++){
-                        finalizeList = await finalizeQuery(identifier: identifier, queryEvent: queryEvent[i], signature: querySignatureList[i]);
-
-                        //If query requires action, show Alert Dialog
-                        if(finalizeList.isNotEmpty){
-                          if(!actionClicked){
-                            _showMyDialog(finalizeList).then((value) => setState((){}));
-                          }
-                        }
-                      }
+                      // List<String> queryEvent = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
+                      // var querySignatureList = [];
+                      // List<ActionRequired> finalizeList = [];
+                      //
+                      // //Sign each query
+                      // for(var event in queryEvent){
+                      //   querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(event) : await signer.sign(event)));
+                      // }
+                      //
+                      // //Finalize each query
+                      // for (int i=0; i<querySignatureList.length; i++){
+                      //   finalizeList = await finalizeQuery(identifier: identifier, queryEvent: queryEvent[i], signature: querySignatureList[i]);
+                      //
+                      //   //If query requires action, show Alert Dialog
+                      //   if(finalizeList.isNotEmpty){
+                      //     if(!actionClicked){
+                      //       _showMyDialog(finalizeList).then((value) => setState((){}));
+                      //     }
+                      //   }
+                      // }
 
                       //Every 15 seconds query group mailbox
                       // for (var group in groupIdentifiers){
@@ -415,6 +416,8 @@ class _MyAppState extends State<MyApp> {
             RawMaterialButton(
               onPressed: () async{
                 if(Platform.isAndroid){
+                  print("-------------------------------------------------");
+                  print(groupIdentifiers[0]);
                   for (var group in groupIdentifiers){
                     var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
                     var signedGroupQuery = [];
@@ -432,22 +435,22 @@ class _MyAppState extends State<MyApp> {
                     }
                   }
 
-                  for (var group in groupIdentifiers){
-                    var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
-                    var signedGroupQuery = [];
-
-                    //Sign each query
-                    for (var singleQuery in groupQuery){
-                      signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
-                    }
-
-                    //Finalize each query
-                    for (int i=0; i<signedGroupQuery.length; i++) {
-                      await finalizeQuery(identifier: identifier,
-                          queryEvent: groupQuery[i],
-                          signature: signedGroupQuery[i]);
-                    }
-                  }
+                  // for (var group in groupIdentifiers){
+                  //   var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
+                  //   var signedGroupQuery = [];
+                  //
+                  //   //Sign each query
+                  //   for (var singleQuery in groupQuery){
+                  //     signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
+                  //   }
+                  //
+                  //   //Finalize each query
+                  //   for (int i=0; i<signedGroupQuery.length; i++) {
+                  //     await finalizeQuery(identifier: identifier,
+                  //         queryEvent: groupQuery[i],
+                  //         signature: signedGroupQuery[i]);
+                  //   }
+                  // }
                 }else{
                   for (var group in groupIdentifiers){
                     var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);

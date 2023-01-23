@@ -104,57 +104,54 @@ class _MyAppState extends State<MyApp> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             RawMaterialButton(
-              onPressed: () async{
-                //Create keys
-                List<PublicKey> vec1 = [];
-                vec1.add(await newPublicKey(kt: KeyType.Ed25519, keyB64: current_b64_key));
-                List<PublicKey> vec2 = [];
-                vec2.add(await newPublicKey(kt: KeyType.Ed25519, keyB64: next_b64_key));
-                List<String> vec3 = [wit_location];
+                onPressed: () async{
+                  //Create keys
+                  List<PublicKey> vec1 = [];
+                  vec1.add(await newPublicKey(kt: KeyType.Ed25519, keyB64: current_b64_key));
+                  List<PublicKey> vec2 = [];
+                  vec2.add(await newPublicKey(kt: KeyType.Ed25519, keyB64: next_b64_key));
+                  List<String> vec3 = [wit_location];
 
-                //Start the inception
-                setState((){
-                  isIncepting = true;
-                });
-                var icp_event = null;
-                try{
-                  icp_event = await incept(
-                      publicKeys: vec1,
-                      nextPubKeys: vec2,
-                      witnesses: vec3,
-                      witnessThreshold: 1);
+                  //Start the inception
                   setState((){
-                    isIncepting = false;
+                    isIncepting = true;
                   });
-                }catch(e){
-                  print(e);
-                  setState((){isInceptionError = true;});
-                }
+                  var icp_event = null;
+                  try{
+                    icp_event = await incept(
+                        publicKeys: vec1,
+                        nextPubKeys: vec2,
+                        witnesses: vec3,
+                        witnessThreshold: 1);
+                    setState((){
+                      isIncepting = false;
+                    });
+                  }catch(e){
+                    setState((){isInceptionError = true;});
+                  }
 
-                //Sign and finalize the inception
-                var signature = await signer.sign(icp_event);
-                print(icp_event);
-                print(signature);
-                identifier = await finalizeInception(
-                    event: icp_event,
-                    signature: await signatureFromHex(
-                        st: SignatureType.Ed25519Sha512, signature: signature));
-                initiatorId = identifier.id;
-                await notifyWitnesses(identifier: identifier);
+                  //Sign and finalize the inception
+                  var signature = await signer.sign(icp_event);
+                  identifier = await finalizeInception(
+                      event: icp_event,
+                      signature: await signatureFromHex(
+                          st: SignatureType.Ed25519Sha512, signature: signature));
+                  initiatorId = identifier.id;
+                  await notifyWitnesses(identifier: identifier);
 
-                //Refresh the UI
-                setState((){
-                  isInceptionFinalized = true;
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: const Text("Incept identifier", style: TextStyle(fontWeight: FontWeight.bold),),
-              ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18.0),
-                  side: const BorderSide(width: 2)
-              )
+                  //Refresh the UI
+                  setState((){
+                    isInceptionFinalized = true;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: const Text("Incept identifier", style: TextStyle(fontWeight: FontWeight.bold),),
+                ),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18.0),
+                    side: const BorderSide(width: 2)
+                )
             ),
             isIncepting ? connectingToWitness() : Container(),
             isInceptionError ? inceptionError() : Container(),
@@ -162,23 +159,21 @@ class _MyAppState extends State<MyApp> {
             initiatorId.isNotEmpty ? Text(initiatorId, style: TextStyle(color: Colors.green),) : Container(),
             initiatorId.isNotEmpty ? SizedBox(height: 10,) : Container(),
             isInceptionFinalized ? RawMaterialButton(
-              onPressed: () async{
-                //Add the witness to the list
-                witness_id_list.add(witness_id);
+                onPressed: () async{
+                  //Add the witness to the list
+                  witness_id_list.add(witness_id);
 
-                //Query mailbox and finalize it
-                var query = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
-                var sig_query = await signer.sign(query[0]);
-                await finalizeQuery(identifier: identifier, queryEvent: query[0], signature: await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: sig_query));
+                  //Query mailbox and finalize it
+                  var query = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
+                  var sig_query = await signer.sign(query[0]);
+                  await finalizeQuery(identifier: identifier, queryEvent: query[0], signature: await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: sig_query));
 
-                //Refresh the UI
-                setState(() {
-                  isMailboxQueried = true;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Mailbox queried!')));
-                });
-
-                print(await getKel(cont: identifier));
-              },
+                  //Refresh the UI
+                  setState(() {
+                    isMailboxQueried = true;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Mailbox queried!')));
+                  });
+                },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: const Text("Query mailbox", style: TextStyle(fontWeight: FontWeight.bold),),
@@ -211,44 +206,44 @@ class _MyAppState extends State<MyApp> {
                     const Duration(seconds: 15),
                         (Timer t) async{
                       //Every 15 seconds query own mailbox
-                      // List<String> queryEvent = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
-                      // var querySignatureList = [];
-                      // List<ActionRequired> finalizeList = [];
-                      //
-                      // //Sign each query
-                      // for(var event in queryEvent){
-                      //   querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(event) : await signer.sign(event)));
-                      // }
-                      //
-                      // //Finalize each query
-                      // for (int i=0; i<querySignatureList.length; i++){
-                      //   finalizeList = await finalizeQuery(identifier: identifier, queryEvent: queryEvent[i], signature: querySignatureList[i]);
-                      //
-                      //   //If query requires action, show Alert Dialog
-                      //   if(finalizeList.isNotEmpty){
-                      //     if(!actionClicked){
-                      //       _showMyDialog(finalizeList).then((value) => setState((){}));
-                      //     }
-                      //   }
-                      // }
+                      List<String> queryEvent = await queryMailbox(whoAsk: identifier, aboutWho: identifier, witness: witness_id_list);
+                      var querySignatureList = [];
+                      List<ActionRequired> finalizeList = [];
+
+                      //Sign each query
+                      for(var event in queryEvent){
+                        querySignatureList.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(event) : await signer.sign(event)));
+                      }
+
+                      //Finalize each query
+                      for (int i=0; i<querySignatureList.length; i++){
+                        finalizeList = await finalizeQuery(identifier: identifier, queryEvent: queryEvent[i], signature: querySignatureList[i]);
+
+                        //If query requires action, show Alert Dialog
+                        if(finalizeList.isNotEmpty){
+                          if(!actionClicked){
+                            _showMyDialog(finalizeList).then((value) => setState((){}));
+                          }
+                        }
+                      }
 
                       //Every 15 seconds query group mailbox
-                      // for (var group in groupIdentifiers){
-                      //   var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
-                      //   var signedGroupQuery = [];
-                      //
-                      //   //Sign each query
-                      //   for (var singleQuery in groupQuery){
-                      //     signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
-                      //   }
-                      //
-                      //   //Finalize each query
-                      //   for (int i=0; i<signedGroupQuery.length; i++) {
-                      //     await finalizeQuery(identifier: identifier,
-                      //         queryEvent: groupQuery[i],
-                      //         signature: signedGroupQuery[i]);
-                      //   }
-                      // }
+                      for (var group in groupIdentifiers){
+                        var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
+                        var signedGroupQuery = [];
+
+                        //Sign each query
+                        for (var singleQuery in groupQuery){
+                          signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
+                        }
+
+                        //Finalize each query
+                        for (int i=0; i<signedGroupQuery.length; i++) {
+                          await finalizeQuery(identifier: identifier,
+                              queryEvent: groupQuery[i],
+                              signature: signedGroupQuery[i]);
+                        }
+                      }
                     },
                   );
                 },
@@ -268,42 +263,41 @@ class _MyAppState extends State<MyApp> {
               size: 200.0,
             ) : Container(),
             isWatcherAdded ? RawMaterialButton(
-              onPressed: () async{
-                //Get the group participant json from QR
-                var participantId = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Scanner()),
-                );
+                onPressed: () async{
+                  //Get the group participant json from QR
+                  var participantId = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Scanner()),
+                  );
 
-                //Decode the QR and send the oobi to watcher
-                var oobiReceived = jsonDecode(participantId);
-                print(oobiReceived);
-                await sendOobiToWatcher(identifier: identifier, oobisJson: jsonEncode(oobiReceived[0]));
-                await sendOobiToWatcher(identifier: identifier, oobisJson: jsonEncode(oobiReceived[1]));
+                  //Decode the QR and send the oobi to watcher
+                  var oobiReceived = jsonDecode(participantId);
+                  await sendOobiToWatcher(identifier: identifier, oobisJson: jsonEncode(oobiReceived[0]));
+                  await sendOobiToWatcher(identifier: identifier, oobisJson: jsonEncode(oobiReceived[1]));
 
-                //Add the participant from the QR to the list of participants, refresh the list
-                var participant = await newIdentifier(idStr: oobiReceived[1]['cid']);
-                if(!participants.contains(participant)){
-                  setState(() {
-                    participants.add(participant);
-                    selectedParticipants.add(true);
-                  });
-                }
+                  //Add the participant from the QR to the list of participants, refresh the list
+                  var participant = await newIdentifier(idStr: oobiReceived[1]['cid']);
+                  if(!participants.contains(participant)){
+                    setState(() {
+                      participants.add(participant);
+                      selectedParticipants.add(true);
+                    });
+                  }
 
-                //Query the watcher about new participant
-                List<String> watcherQuery = await queryWatchers(whoAsk: identifier, aboutWho: participant);
-                List<Signature> querySignatures = [];
+                  //Query the watcher about new participant
+                  List<String> watcherQuery = await queryWatchers(whoAsk: identifier, aboutWho: participant);
+                  List<Signature> querySignatures = [];
 
-                //Sign the query
-                for(String query in watcherQuery){
-                  querySignatures.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(query)));
-                }
+                  //Sign the query
+                  for(String query in watcherQuery){
+                    querySignatures.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(query)));
+                  }
 
-                //Finalize the query
-                for(int i=0; i<querySignatures.length; i++){
-                  await finalizeQuery(identifier: identifier, queryEvent: watcherQuery[i], signature: querySignatures[i]);
-                }
-              },
+                  //Finalize the query
+                  for(int i=0; i<querySignatures.length; i++){
+                    await finalizeQuery(identifier: identifier, queryEvent: watcherQuery[i], signature: querySignatures[i]);
+                  }
+                },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: const Text("Scan for participants", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -327,11 +321,11 @@ class _MyAppState extends State<MyApp> {
               height: 150,
               decoration: BoxDecoration(
                 border: Border.all(
-                  width: 2.0
-              ),
-              borderRadius: BorderRadius.all(
-                  Radius.circular(18.0)
-              ),
+                    width: 2.0
+                ),
+                borderRadius: BorderRadius.all(
+                    Radius.circular(18.0)
+                ),
               ),
               child: ListView.builder(
                   itemCount: participants.length,
@@ -414,73 +408,6 @@ class _MyAppState extends State<MyApp> {
                     return Text(groupIdentifiers[index].id);
                   }),
             ),
-            groupIdentifiers.isNotEmpty ?
-            RawMaterialButton(
-              onPressed: () async{
-                if(Platform.isAndroid){
-                  print("-------------------------------------------------");
-                  print(groupIdentifiers[0]);
-                  for (var group in groupIdentifiers){
-                    var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
-                    var signedGroupQuery = [];
-
-                    //Sign each query
-                    for (var singleQuery in groupQuery){
-                      signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
-                    }
-
-                    //Finalize each query
-                    for (int i=0; i<signedGroupQuery.length; i++) {
-                      await finalizeQuery(identifier: identifier,
-                          queryEvent: groupQuery[i],
-                          signature: signedGroupQuery[i]);
-                    }
-                  }
-
-                  // for (var group in groupIdentifiers){
-                  //   var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
-                  //   var signedGroupQuery = [];
-                  //
-                  //   //Sign each query
-                  //   for (var singleQuery in groupQuery){
-                  //     signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
-                  //   }
-                  //
-                  //   //Finalize each query
-                  //   for (int i=0; i<signedGroupQuery.length; i++) {
-                  //     await finalizeQuery(identifier: identifier,
-                  //         queryEvent: groupQuery[i],
-                  //         signature: signedGroupQuery[i]);
-                  //   }
-                  // }
-                }else{
-                  for (var group in groupIdentifiers){
-                    var groupQuery = await queryMailbox(whoAsk: identifier, aboutWho: group, witness: witness_id_list);
-                    var signedGroupQuery = [];
-
-                    //Sign each query
-                    for (var singleQuery in groupQuery){
-                      signedGroupQuery.add(await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: Platform.isAndroid ? await signer.signNoAuth(singleQuery) : await signer.sign(singleQuery)));
-                    }
-
-                    //Finalize each query
-                    for (int i=0; i<signedGroupQuery.length; i++) {
-                      await finalizeQuery(identifier: identifier,
-                          queryEvent: groupQuery[i],
-                          signature: signedGroupQuery[i]);
-                    }
-                  }
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: const Text("query(temp)", style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18.0),
-                  side: const BorderSide(width: 2)
-              )
-            ) : Container(),
             RawMaterialButton(
                 onPressed: () async{
                   groupKel = await getKel(cont: groupIdentifiers[0]);
@@ -548,10 +475,8 @@ class _MyAppState extends State<MyApp> {
                   actionClicked = true;
                 });
                 for(var entry in finalizeList){
-                  print(entry.action);
                   var selectedAction = SelectedAction.multisigRequest;
                   if(entry.action == selectedAction.action){
-                    print('wlazło');
                     var icpSignature = await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(entry.data));
                     var icpExSignature = await signatureFromHex(st: SignatureType.Ed25519Sha512, signature: await signer.sign(entry.additionaData));
                     groupIdentifier2 = await finalizeGroupIncept(
@@ -564,7 +489,6 @@ class _MyAppState extends State<MyApp> {
                               signature: icpExSignature)
                         ]
                     );
-                    print(groupIdentifier2);
                     groupIdentifiers.add(groupIdentifier2);
                     setState(() {});
                   }
